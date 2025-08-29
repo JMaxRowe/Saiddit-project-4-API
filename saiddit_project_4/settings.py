@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'users',
     'communities',
     'posts',
+    'comments',
 ]
 
 REST_FRAMEWORK = {
