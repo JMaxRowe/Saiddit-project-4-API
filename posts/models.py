@@ -1,7 +1,7 @@
 from django.db import models
 from users.models import User
 from communities.models import Community
-
+from django.contrib.contenttypes.fields import GenericRelation
 
 class Post(models.Model):
     is_deleted = models.BooleanField(default=False)
@@ -25,6 +25,7 @@ class Post(models.Model):
         related_name="posts"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    votes = GenericRelation("votes.Vote", related_query_name="post")
 
     def soft_deleted(self):
         self.is_deleted = True

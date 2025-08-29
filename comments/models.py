@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import User
 from posts.models import Post
+from django.contrib.contenttypes.fields import GenericRelation
 
 class Comment(models.Model):
     is_deleted = models.BooleanField(default=False)
@@ -24,6 +25,8 @@ class Comment(models.Model):
         null=True, blank=True,
         related_name="replies"
     )
+
+    votes = GenericRelation("votes.Vote", related_query_name="post")
 
     def soft_deleted(self):
         self.is_deleted = True
