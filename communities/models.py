@@ -4,7 +4,7 @@ from users.models import User
 
 class Community(models.Model):
     name = models.CharField(max_length=25, unique=True)
-    description = models.CharField(max_length=250)
+    description = models.TextField(max_length=250)
     creator = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

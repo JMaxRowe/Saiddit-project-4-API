@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'users',
     'communities',
+    'posts',
 ]
 
 REST_FRAMEWORK = {
