@@ -4,6 +4,8 @@ from communities.models import Community
 
 
 class Post(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    
     POST_TYPES = [
         ("text", "Text"),
         ("image", "Image"),
@@ -23,6 +25,14 @@ class Post(models.Model):
         related_name="posts"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def soft_deleted(self):
+        self.is_deleted = True
+        self.save()
+
+    def restore(self):
+        self.is_deleted = False
+        self.save()
 
     def __str__(self):
         return self.title
