@@ -26,7 +26,7 @@ class Community(models.Model):
             self.is_deleted = False
             self.save()
 
-    def delete(self, using=None, keep_paents=False):
+    def delete(self):
         if not self.is_deleted:
             self.is_deleted=True
             self.save()
