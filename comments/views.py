@@ -1,3 +1,61 @@
-from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .models import Comment
+from .serializers.common import CommentSerializer
+from rest_framework.exceptions import NotFound, PermissionDenied
+from django.db.models import Sum, Count, Q
+from django.db.models.functions import Coalesce
 
-# Create your views here.
+
+class CommentListView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        comments = Comment.objects.all().annotate(
+            score=Coalesce(Sum("votes__value"), 0),
+        )
+        post_id = request.query_params.get("post")
+        parent_id = request.query_params.get("parent")
+        if post_id:
+            comments = comments.filter(post_id=post_id)
+        if parent_id is not None:
+            if parent_id in ('', 'null', 'None'):
+                comments = comments.filter(parent_comment__isnull=True)
+            else:
+                comments = comments.filter(parent_comment_id=parent_id)
+        serialized_comments = CommentSerializer(comments, many=True)
+        return Response(serialized_comments.data)
+
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        comment = Comment.objects.filter(pk=comment.pk).annotate(
+            score=Coalesce(Sum("votes__value"), 0),
+        ).first()
+        comment = serializer.save(commenter=request.user)
+        return Response(CommentSerializer(comment).data, status=201)
+    
+class CommentDetailView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_comment(self, pk):
+        try:
+            comment = Comment.objects.filter(pk=pk).annotate(
+                score=Coalesce(Sum("votes__value"), 0),
+            )
+            return comment
+        except Comment.DoesNotExist:
+            raise NotFound("Comment not found.")
+        
+    def get(self, request, pk):
+        comment = self.get_comment(pk)
+        serialized_comment = CommentSerializer(comment)
+        replies = comment.replies.all().annotate(
+            score=Coalesce(Sum("votes__value"), 0),
+        )
+        serialized_replies = CommentSerializer(replies, many=True)
+        return Response({
+            'comment': serialized_comment.data,
+            'replies': serialized_replies.data
+        })

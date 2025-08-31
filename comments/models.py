@@ -26,15 +26,17 @@ class Comment(models.Model):
         related_name="replies"
     )
 
-    votes = GenericRelation("votes.Vote", related_query_name="post")
-
-    def soft_deleted(self):
-        self.is_deleted = True
-        self.save()
+    votes = GenericRelation("votes.Vote", related_query_name="comment")
 
     def restore(self):
-        self.is_deleted = False
-        self.save()
+        if self.is_deleted:
+            self.is_deleted = False
+            self.save()
+
+    def delete(self):
+        if not self.is_deleted:
+            self.is_deleted=True
+            self.save()
 
     def __str__(self):
         return f"Comment by {self.commenter} on {self.post}"
