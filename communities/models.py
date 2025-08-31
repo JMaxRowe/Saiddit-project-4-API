@@ -19,14 +19,17 @@ class Community(models.Model):
         through="CommunityMembership",
         related_name="communities"
     )
-
-    def soft_deleted(self):
-        self.is_deleted = True
-        self.save()
+        
 
     def restore(self):
-        self.is_deleted = False
-        self.save()
+        if self.is_deleted:
+            self.is_deleted = False
+            self.save()
+
+    def delete(self, using=None, keep_paents=False):
+        if not self.is_deleted:
+            self.is_deleted=True
+            self.save()
 
     def __str__(self):
         return self.name
