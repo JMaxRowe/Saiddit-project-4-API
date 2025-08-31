@@ -49,5 +49,18 @@ class PostDetailView(APIView):
         if post.poster != request.user:
             raise PermissionDenied('You do not have permission to delete this post.')
         post.delete()
-        return Response(status=204)
+        return Response({'status': 'deleted'}, status=204)
     
+class PostRestoreView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist as e:
+            print(e)
+            raise NotFound('Post not found.')
+        if post.poster != request.user:
+            raise PermissionDenied('You do not have permission to restore this post.')
+        post.restore()
+        return Response({'status': 'restored'},status=200)
