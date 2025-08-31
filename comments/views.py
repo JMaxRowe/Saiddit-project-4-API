@@ -30,10 +30,10 @@ class CommentListView(APIView):
     def post(self, request):
         serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        comment = Comment.objects.filter(pk=comment.pk).annotate(
+        created = serializer.save(commenter=request.user)
+        comment = Comment.objects.filter(pk=created.pk).annotate(
             score=Coalesce(Sum("votes__value"), 0),
         ).first()
-        comment = serializer.save(commenter=request.user)
         return Response(CommentSerializer(comment).data, status=201)
     
 class CommentDetailView(APIView):
@@ -41,9 +41,9 @@ class CommentDetailView(APIView):
 
     def get_comment(self, pk):
         try:
-            comment = Comment.objects.filter(pk=pk).annotate(
+            comment = Comment.objects.annotate(
                 score=Coalesce(Sum("votes__value"), 0),
-            )
+            ).get(pk=pk)
             return comment
         except Comment.DoesNotExist:
             raise NotFound("Comment not found.")
@@ -51,7 +51,7 @@ class CommentDetailView(APIView):
     def get(self, request, pk):
         comment = self.get_comment(pk)
         serialized_comment = CommentSerializer(comment)
-        replies = comment.replies.all().annotate(
+        replies = Comment.replies.all().annotate(
             score=Coalesce(Sum("votes__value"), 0),
         )
         serialized_replies = CommentSerializer(replies, many=True)
@@ -59,3 +59,22 @@ class CommentDetailView(APIView):
             'comment': serialized_comment.data,
             'replies': serialized_replies.data
         })
+
+    def put(self, request, pk):
+        comment = self.get_comment(pk)
+        if comment.commenter != request.user:
+            raise PermissionDenied('You do not have permission to update this comment.')
+        serialized_comment = CommentSerializer(comment, data=request.data, partial=True)
+        serialized_comment.is_valid(raise_exception=True)
+        serialized_comment.save()
+        updated = Comment.objects.filter(pk=comment.pk).annotate(
+            score=Coalesce(Sum("votes__value"), 0),
+        ).first()
+        return Response(CommentSerializer(updated).data)
+    
+    def delete(self, request, pk):
+        comment = self.get_comment(pk)
+        if comment.commenter != request.user:
+            raise PermissionDenied('You do not have permission to delete this comment.')
+        comment.delete()
+        return Response({'status': 'deleted'}, status=204)
