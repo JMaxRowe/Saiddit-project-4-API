@@ -16,6 +16,7 @@ class Post(models.Model):
     type = models.CharField(max_length=5, choices=POST_TYPES)
     poster = models.ForeignKey(
         User,
+        blank=True,
         on_delete=models.CASCADE,
         related_name='posts'
     )
