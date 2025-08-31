@@ -78,3 +78,17 @@ class CommentDetailView(APIView):
             raise PermissionDenied('You do not have permission to delete this comment.')
         comment.delete()
         return Response({'status': 'deleted'}, status=204)
+    
+class CommentRestoreView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def post(self, request, pk):
+        try:
+            comment = Comment.objects.get(pk=pk)
+        except Comment.DoesNotExist as e:
+            print(e)
+            raise NotFound('comment not found.')
+        if comment.commenter != request.user:
+            raise PermissionDenied('You do not have permission to restore this comment.')
+        comment.restore()
+        return Response({'status': 'restored'},status=200)
