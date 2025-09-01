@@ -53,7 +53,7 @@ class PostDetailView(APIView):
         serialized_post = PostSerializer(post, data=request.data, partial=True)
         serialized_post.is_valid(raise_exception=True)
         serialized_post.save()
-        updated_post = Post.objects.filter(pk=created.pk).annotate(
+        updated_post = Post.objects.filter(pk=serialized_post.pk).annotate(
             score = Coalesce(Sum('votes__value'), 0)
         ).first()
         reserialized_post = PostSerializer(updated_post)
