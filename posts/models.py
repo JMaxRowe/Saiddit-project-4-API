@@ -12,7 +12,8 @@ class Post(models.Model):
         ("video", "Video"),
     ]
     title = models.CharField(max_length=75)
-    body = models.TextField(max_length=1000)
+    body = models.TextField(max_length=1000, blank=True, default="")
+    media_url = models.URLField(max_length=500, blank=True, default="")
     type = models.CharField(max_length=5, choices=POST_TYPES)
     poster = models.ForeignKey(
         User,
@@ -26,7 +27,7 @@ class Post(models.Model):
         related_name="posts"
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     votes = GenericRelation("votes.Vote", related_query_name="post")
 
     def restore(self):

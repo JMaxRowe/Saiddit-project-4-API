@@ -7,6 +7,7 @@ class Community(models.Model):
     
     name = models.CharField(max_length=25, unique=True)
     description = models.TextField(max_length=250)
+    cover_image = models.URLField(max_length=500, blank=True)
     creator = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
