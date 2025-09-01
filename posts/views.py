@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from .models import Post
 from .serializers.common import PostSerializer
 from rest_framework.exceptions import NotFound, PermissionDenied
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 # Create your views here.
 
@@ -12,8 +12,9 @@ class PostListView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = Post.objects.all().annotate(
-            score=Coalesce(Sum('votes__value'), 0)
+        posts = Post.objects.select_related("poster", "community").annotate(
+            score=Coalesce(Sum('votes__value'), 0),
+            comments_count=Count("comments", distinct=True)
         )
         serialized_posts = PostSerializer(posts, many=True)
         return Response(serialized_posts.data)
@@ -22,8 +23,9 @@ class PostListView(APIView):
         serialized_posts = PostSerializer(data=request.data)
         serialized_posts.is_valid(raise_exception=True)
         created = serialized_posts.save(poster=request.user)
-        post = Post.objects.filter(pk=created.pk).annotate(
-            score = Coalesce(Sum('votes__value'), 0)
+        post = Post.objects.select_related("poster", "community").filter(pk=created.pk).annotate(
+            score = Coalesce(Sum('votes__value'), 0),
+            comments_count=Count("comments", distinct=True)
         ).first()
         return Response(PostSerializer(post).data, 201)
     
@@ -38,8 +40,9 @@ class PostDetailView(APIView):
             raise NotFound('Post not found.')
 
     def get(self, request, pk):
-        post = Post.objects.filter(pk=pk).annotate(
+        post = Post.objects.select_related("poster", "community").filter(pk=pk).annotate(
             score=Coalesce(Sum("votes__value"), 0),
+            comments_count=Count("comments", distinct=True)
         ).first()
         if not post:
             raise NotFound('Post not found.')
@@ -53,8 +56,9 @@ class PostDetailView(APIView):
         serialized_post = PostSerializer(post, data=request.data, partial=True)
         serialized_post.is_valid(raise_exception=True)
         serialized_post.save()
-        updated_post = Post.objects.filter(pk=serialized_post.pk).annotate(
-            score = Coalesce(Sum('votes__value'), 0)
+        updated_post = Post.objects.select_related("poster", "community").filter(pk=post.pk).annotate(
+            score = Coalesce(Sum('votes__value'), 0),
+            comments_count=Count("comments", distinct=True)
         ).first()
         reserialized_post = PostSerializer(updated_post)
         return Response(reserialized_post.data)

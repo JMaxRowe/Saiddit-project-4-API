@@ -26,6 +26,7 @@ class Post(models.Model):
         related_name="posts"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    
     votes = GenericRelation("votes.Vote", related_query_name="post")
 
     def restore(self):
