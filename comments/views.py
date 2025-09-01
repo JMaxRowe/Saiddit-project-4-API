@@ -51,7 +51,7 @@ class CommentDetailView(APIView):
     def get(self, request, pk):
         comment = self.get_comment(pk)
         serialized_comment = CommentSerializer(comment)
-        replies = Comment.replies.all().annotate(
+        replies = comment.replies.all().annotate(
             score=Coalesce(Sum("votes__value"), 0),
         )
         serialized_replies = CommentSerializer(replies, many=True)
