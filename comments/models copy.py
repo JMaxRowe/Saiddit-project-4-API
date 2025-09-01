@@ -1,0 +1,42 @@
+from django.db import models
+from users.models import User
+from communities.models import Community
+from django.contrib.contenttypes.fields import GenericRelation
+
+class Post(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    
+    POST_TYPES = [
+        ("text", "Text"),
+        ("image", "Image"),
+        ("video", "Video"),
+    ]
+    title = models.CharField(max_length=75)
+    body = models.TextField(max_length=1000)
+    type = models.CharField(max_length=5, choices=POST_TYPES)
+    poster = models.ForeignKey(
+        User,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='posts'
+    )
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name="posts"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    votes = GenericRelation("votes.Vote", related_query_name="post")
+
+    def restore(self):
+        if self.is_deleted:
+            self.is_deleted = False
+            self.save()
+
+    def delete(self):
+        if not self.is_deleted:
+            self.is_deleted=True
+            self.save()
+
+    def __str__(self):
+        return self.title

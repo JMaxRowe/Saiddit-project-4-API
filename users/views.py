@@ -15,4 +15,4 @@ class SignUpView(APIView):
 
         user = User.objects.get(pk=serialized_user.data["id"])
         refresh = RefreshToken.for_user(user)
-        return Response({'token': str(refresh.access_token)}, 201)
+        return Response({'access': str(refresh.access_token)}, 201)
