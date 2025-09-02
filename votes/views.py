@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Vote
 from .serializers.common import VoteSerializer
 from rest_framework.exceptions import NotFound, PermissionDenied
+from django.contrib.contenttypes.models import ContentType
+
 
 # Create your views here.
 class VoteView(APIView):
@@ -20,10 +22,10 @@ class VoteView(APIView):
                 object_id=object_id,
                 defaults={"value": value}
             )
-            return Response(
-                {"status": "vote set", "value": vote.value},
-                status=200
-            )
+            return Response({
+                "post": ContentType.objects.get_by_natural_key('posts','post').id,
+                "comment": ContentType.objects.get_by_natural_key('comments','comment').id,
+            })
         return Response(serialized_vote.errors, status=400)
     
     def delete(self, request):

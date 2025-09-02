@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, IntegerField, CharField, URLField, ValidationError
+from rest_framework.serializers import ModelSerializer, IntegerField, CharField, URLField, ValidationError, SerializerMethodField
 from ..models import Post
 from users.serializers.common import OwnerSerializer
 from communities.serializers.common import CommunitySerializer
@@ -11,6 +11,8 @@ class PostSerializer(ModelSerializer):
     comments_count = IntegerField(read_only=True)
     poster = OwnerSerializer(read_only=True)
     community = CommunitySerializer(read_only=True)
+    user_vote = IntegerField(read_only=True)
+
 
     class Meta:
         model=Post

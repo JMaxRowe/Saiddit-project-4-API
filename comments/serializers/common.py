@@ -6,11 +6,13 @@ class CommentSerializer(ModelSerializer):
     score = IntegerField(read_only=True)
     replies_count = IntegerField(read_only=True)
     commenter = OwnerSerializer(read_only=True)
+    user_vote = IntegerField(read_only=True)
+
 
     class Meta:
         model=Comment
-        fields = ["id", "body", "created_at", "commenter", "post", "parent_comment", "is_deleted", "score", "commenter", "replies_count"]
-        read_only_fields = ["id", "created_at", "commenter", "is_deleted", "score", "commenter", "replies_count"]
+        fields = ["id", "body", "created_at", "commenter", "post", "parent_comment", "is_deleted", "score", "commenter", "replies_count", "user_vote"]
+        read_only_fields = ["id", "created_at", "commenter", "is_deleted", "score", "commenter", "replies_count", "user_vote"]
 
     def validate_parent_comment(self, value):
         post_id = self.initial_data.get("post")
