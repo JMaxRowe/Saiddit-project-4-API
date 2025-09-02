@@ -1,9 +1,12 @@
 from rest_framework.serializers import ModelSerializer, ValidationError, IntegerField
 from ..models import Comment
+from users.serializers.common import OwnerSerializer
 
 class CommentSerializer(ModelSerializer):
     score = IntegerField(read_only=True)
-    
+    replies_count = IntegerField(read_only=True)
+    commenter = OwnerSerializer(read_only=True)
+
     class Meta:
         model=Comment
         fields = ["id", "body", "created_at", "commenter", "post", "parent_comment", "is_deleted", "score"]

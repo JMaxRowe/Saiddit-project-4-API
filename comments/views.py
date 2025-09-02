@@ -12,7 +12,7 @@ class CommentListView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        comments = Comment.objects.all().annotate(
+        comments = Comment.objects.select_related("commenter", "post").annotate(
             score=Coalesce(Sum("votes__value"), 0),
         )
         post_id = request.query_params.get("post")
@@ -31,7 +31,7 @@ class CommentListView(APIView):
         serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         created = serializer.save(commenter=request.user)
-        comment = Comment.objects.filter(pk=created.pk).annotate(
+        comment = Comment.objects.select_related("commenter", "post").filter(pk=created.pk).annotate(
             score=Coalesce(Sum("votes__value"), 0),
         ).first()
         return Response(CommentSerializer(comment).data, status=201)
@@ -41,7 +41,7 @@ class CommentDetailView(APIView):
 
     def get_comment(self, pk):
         try:
-            comment = Comment.objects.annotate(
+            comment = Comment.objects.select_related("commenter", "post").annotate(
                 score=Coalesce(Sum("votes__value"), 0),
             ).get(pk=pk)
             return comment
@@ -51,7 +51,7 @@ class CommentDetailView(APIView):
     def get(self, request, pk):
         comment = self.get_comment(pk)
         serialized_comment = CommentSerializer(comment)
-        replies = comment.replies.all().annotate(
+        replies = comment.replies.select_related("commenter", "post").annotate(
             score=Coalesce(Sum("votes__value"), 0),
         )
         serialized_replies = CommentSerializer(replies, many=True)
