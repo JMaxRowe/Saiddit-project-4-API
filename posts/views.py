@@ -16,7 +16,7 @@ class PostListView(APIView):
     def get(self, request):
         user = request.user
         posts = Post.objects.select_related("poster", "community").annotate(
-            score=Coalesce(Sum('votes__value'), 0),
+            score=Coalesce(Sum('votes__value', distinct=True), 0),
             comments_count=Count("comments", distinct=True),
         )
         if user.is_authenticated:
@@ -43,7 +43,7 @@ class PostListView(APIView):
         serialized_posts.is_valid(raise_exception=True)
         created = serialized_posts.save(poster=request.user)
         post = Post.objects.select_related("poster", "community").filter(pk=created.pk).annotate(
-            score = Coalesce(Sum('votes__value'), 0),
+            score = Coalesce(Sum('votes__value', distinct=True), 0),
             comments_count=Count("comments", distinct=True),
         )
         if user.is_authenticated:
@@ -77,7 +77,7 @@ class PostDetailView(APIView):
     def get(self, request, pk):
         user = request.user
         post = Post.objects.select_related("poster", "community").filter(pk=pk).annotate(
-            score=Coalesce(Sum("votes__value"), 0),
+            score=Coalesce(Sum("votes__value", distinct=True), 0),
             comments_count=Count("comments", distinct=True),
         )
         if user.is_authenticated:
@@ -110,7 +110,7 @@ class PostDetailView(APIView):
         serialized_post.is_valid(raise_exception=True)
         serialized_post.save()
         updated_post = Post.objects.select_related("poster", "community").filter(pk=post.pk).annotate(
-            score = Coalesce(Sum('votes__value'), 0),
+            score = Coalesce(Sum('votes__value', distinct=True), 0),
             comments_count=Count("comments", distinct=True),
             
         ).first()
