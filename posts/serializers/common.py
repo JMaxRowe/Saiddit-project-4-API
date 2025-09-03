@@ -4,6 +4,7 @@ from users.serializers.common import OwnerSerializer
 from communities.serializers.common import CommunitySerializer
 from django.contrib.contenttypes.models import ContentType
 from communities.models import Community
+from votes.serializers.common import VoteSerializer
 
 class PostSerializer(ModelSerializer):
     body = CharField(required=False, allow_blank=True)
@@ -48,3 +49,6 @@ class PostSerializer(ModelSerializer):
         if errors:
             raise ValidationError(errors)
         return attrs
+    
+class PopulatedPostSerializer(PostSerializer):
+    votes = VoteSerializer(many=True)
