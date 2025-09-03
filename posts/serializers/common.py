@@ -1,8 +1,9 @@
-from rest_framework.serializers import ModelSerializer, IntegerField, CharField, URLField, ValidationError, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, IntegerField, CharField, URLField, ValidationError, SerializerMethodField, PrimaryKeyRelatedField
 from ..models import Post
 from users.serializers.common import OwnerSerializer
 from communities.serializers.common import CommunitySerializer
 from django.contrib.contenttypes.models import ContentType
+from communities.models import Community
 
 class PostSerializer(ModelSerializer):
     body = CharField(required=False, allow_blank=True)
@@ -12,16 +13,14 @@ class PostSerializer(ModelSerializer):
     comments_count = IntegerField(read_only=True)
     poster = OwnerSerializer(read_only=True)
     community = CommunitySerializer(read_only=True)
+    community_id = PrimaryKeyRelatedField(
+        queryset=Community.objects.all(), write_only=True, source="community"
+    )
     user_vote = IntegerField(read_only=True)
     contentTypeId = SerializerMethodField()
-    objectType = SerializerMethodField()
 
     def get_contentTypeId(self, obj):
         return ContentType.objects.get_for_model(type(obj), for_concrete_model=False).id
-
-    def get_objectType(self, obj):
-        ct = ContentType.objects.get_for_model(type(obj), for_concrete_model=False)
-        return f"{ct.app_label}.{ct.model}"
 
 
     class Meta:
