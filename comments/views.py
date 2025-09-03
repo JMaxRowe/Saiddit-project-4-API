@@ -13,7 +13,7 @@ class CommentListView(APIView):
 
     def get(self, request):
         comments = Comment.objects.select_related("commenter", "post").annotate(
-            score=Coalesce(Sum("votes__value"), 0),
+            score=Coalesce(Sum("votes__value", distinct=True), 0),
             replies_count=Count("replies", distinct=True),
         )
         post_id = request.query_params.get("post")
@@ -32,7 +32,7 @@ class CommentListView(APIView):
         serializer.is_valid(raise_exception=True)
         created = serializer.save(commenter=request.user)
         comment = Comment.objects.select_related("commenter", "post").filter(pk=created.pk).annotate(
-            score=Coalesce(Sum("votes__value"), 0),
+            score=Coalesce(Sum("votes__value", distinct=True), 0),
             replies_count=Count("replies", distinct=True),
         ).first()
         return Response(CommentSerializer(comment, context={"request": request}).data, status=201)
@@ -42,7 +42,7 @@ class CommentDetailView(APIView):
 
     def get_comment(self, pk):
         comment = Comment.objects.select_related("commenter", "post").filter(pk=pk).annotate(
-            score=Coalesce(Sum("votes__value"), 0),
+            score=Coalesce(Sum("votes__value", distinct=True), 0),
             replies_count=Count("replies", distinct=True),
         ).first()
         if not comment:
@@ -53,7 +53,7 @@ class CommentDetailView(APIView):
         comment = self.get_comment(pk)
         serialized_comment = CommentSerializer(comment, context={"request": request})
         replies = comment.replies.all().select_related("commenter", "post").annotate(
-            score=Coalesce(Sum("votes__value"), 0),
+            score=Coalesce(Sum("votes__value", distinct=True), 0),
             replies_count=Count("replies", distinct=True),
         )
         serialized_replies = CommentSerializer(replies, many=True, context={"request": request})
