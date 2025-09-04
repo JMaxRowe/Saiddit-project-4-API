@@ -42,7 +42,7 @@ class PostListView(APIView):
             posts = posts.annotate(
                 user_vote=Value(0, output_field=IntegerField())
             )
-        serialized_posts = PostSerializer(posts, many=True)
+        serialized_posts = PostSerializer(posts, many=True, context={"request": request})
         return Response(serialized_posts.data)
     
     def post(self, request):
@@ -124,7 +124,7 @@ class PostDetailView(APIView):
             
         if not post:
             raise NotFound('Post not found.')
-        serialized_post = PostSerializer(post)
+        serialized_post = PostSerializer(post, context={"request": request})
         return Response(serialized_post.data)
     
     def put(self, request, pk):
@@ -132,6 +132,7 @@ class PostDetailView(APIView):
         post = self.get_post(pk)
         if post.poster != request.user:
             raise PermissionDenied('You do not have permission to update this post.')
+
         serialized_post = PostSerializer(post, data=request.data, partial=True)
         serialized_post.is_valid(raise_exception=True)
         serialized_post.save()
@@ -141,13 +142,13 @@ class PostDetailView(APIView):
             object_id=OuterRef("pk"),
         ).values("object_id").annotate(score=Sum("value")).values("score")
 
-        updated_post = Post.objects.select_related("poster", "community").get(pk=post.pk).annotate(
-            score = Coalesce(Subquery(votes), 0),
+        post_qs = Post.objects.filter(pk=post.pk).select_related("poster", "community").annotate(
+            score=Coalesce(Subquery(votes), 0),
             comments_count=Count("comments", distinct=True),
-            
         )
+
         if user.is_authenticated:
-            post = post.annotate(
+            post_qs = post_qs.annotate(
                 user_vote=Subquery(
                     Vote.objects.filter(
                         voter_id=user.id,
@@ -158,12 +159,15 @@ class PostDetailView(APIView):
                 )
             )
         else:
-            post = post.annotate(
+            post_qs = post_qs.annotate(
                 user_vote=Value(0, output_field=IntegerField())
             )
-        if not post:
+
+        updated_post = post_qs.first()
+        if not updated_post:
             raise NotFound('Post not found.')
-        reserialized_post = PostSerializer(updated_post)
+
+        reserialized_post = PostSerializer(updated_post, context={'request': request})
         return Response(reserialized_post.data)
     
     def delete(self, request, pk):
