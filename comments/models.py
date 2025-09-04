@@ -26,7 +26,7 @@ class Comment(models.Model):
         related_name="replies"
     )
 
-    votes = GenericRelation("votes.Vote", related_query_name="comment")
+    votes = GenericRelation("votes.Vote", related_query_name="comments")
 
     def restore(self):
         if self.is_deleted:

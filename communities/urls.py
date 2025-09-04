@@ -1,10 +1,10 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import CommunityViewSets
-
-router = DefaultRouter()
-router.register(r'', CommunityViewSets, basename='community')
+from communities.views import (CommunityListCreateView, CommunityDetailView, CommunityJoinView, CommunityLeaveView, CommunityRestoreView)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', CommunityListCreateView.as_view()),
+    path('<int:pk>/', CommunityDetailView.as_view()),
+    path('<int:pk>/join/', CommunityJoinView.as_view()),
+    path('<int:pk>/leave/', CommunityLeaveView.as_view()),
+    path('<int:pk>/restore/', CommunityRestoreView.as_view()),
 ]
