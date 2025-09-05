@@ -79,7 +79,7 @@ class PostListView(APIView):
                 user_vote=Value(0, output_field=IntegerField())
             )
         post = post.first()
-        return Response(PostSerializer(post).data, 201)
+        return Response(PostSerializer(post, context={'request': request}).data, 201)
     
 class PostDetailView(APIView):
 
