@@ -1,0 +1,1 @@
+web: gunicorn saiddit_project_4.wsgi
