@@ -54,7 +54,8 @@ class CommunityJoinView(APIView):
     def post(self, request, pk):
         community = get_object_or_404(Community, pk=pk)
         community.members.add(request.user)
-        return Response({"status": "joined"})
+        serialized_community = CommunitySerializer(community, context={"request": request})
+        return Response(serialized_community.data)
 
 class CommunityLeaveView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -62,7 +63,8 @@ class CommunityLeaveView(APIView):
     def post(self, request, pk):
         community = get_object_or_404(Community, pk=pk)
         community.members.remove(request.user)
-        return Response({"status": "left"})
+        serialized_community = CommunitySerializer(community, context={"request": request})
+        return Response(serialized_community.data)
 
 class CommunityRestoreView(APIView):
     permission_classes = [permissions.IsAuthenticated]

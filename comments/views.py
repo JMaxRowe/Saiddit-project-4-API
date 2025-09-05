@@ -126,7 +126,8 @@ class CommentDetailView(APIView):
         if comment.commenter != request.user:
             raise PermissionDenied('You do not have permission to delete this comment.')
         comment.delete()
-        return Response({'status': 'deleted'}, status=204)
+        serialized_comment = CommentSerializer(comment, context={'request': request})
+        return Response(serialized_comment.data, status=200)
     
 class CommentRestoreView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -140,4 +141,5 @@ class CommentRestoreView(APIView):
         if comment.commenter != request.user:
             raise PermissionDenied('You do not have permission to restore this comment.')
         comment.restore()
-        return Response({'status': 'restored'},status=200)
+        serialized_comment = CommentSerializer(comment, context={'request': request})
+        return Response(serialized_comment.data, status=200)
